@@ -1,0 +1,59 @@
+modules = ["nodejs-20", "web"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend Dev Server"
+
+[[workflows.workflow]]
+name = "Frontend Dev Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 33441
+externalPort = 3002
+
+[[ports]]
+localPort = 41473
+externalPort = 3000
+
+[[ports]]
+localPort = 41777
+externalPort = 3001
+
+[deployment]
+deploymentTarget = "static"
+build = ["npm", "run", "build"]
+publicDir = "dist"
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_URL = "https://swnwftcfvlmdviknfdou.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bndmdGNmdmxtZHZpa25mZG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Nzc1OTksImV4cCI6MjA4MDA1MzU5OX0.g3-JIdQ8N4GJZZHIZyFf9dt_yMtqMIYR2uun_ZUekqk"
+VITE_SUPABASE_URL = "https://swnwftcfvlmdviknfdou.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bndmdGNmdmxtZHZpa25mZG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0Nzc1OTksImV4cCI6MjA4MDA1MzU5OX0.g3-JIdQ8N4GJZZHIZyFf9dt_yMtqMIYR2uun_ZUekqk"

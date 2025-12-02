@@ -155,26 +155,17 @@ export const QuizFlow = () => {
     }
   }, [step]);
 
-  // Listen for VTurb smartplayer events to show CTA button
-  const vturbBindedRef = useRef(false);
+  // Timer to show CTA button after specified time (in seconds)
+  const CTA_DELAY_SECONDS = 15; // Tempo em segundos para mostrar o botão
   
   useEffect(() => {
     if (step !== 18) return;
     
-    vturbBindedRef.current = false;
+    const timer = setTimeout(() => {
+      setShowCTAButton(true);
+    }, CTA_DELAY_SECONDS * 1000);
     
-    const handleSmartPlayerEvent = (e: any) => {
-      if (e.data === 'O PLAYER APARECEU' || e.data === 'O BOTAO APARECEU' || e.data?.type === 'O PLAYER APARECEU' || e.data?.type === 'O BOTAO APARECEU') {
-        console.log('[VTurb] Button trigger event received - showing CTA');
-        setShowCTAButton(true);
-      }
-    };
-    
-    window.addEventListener('message', handleSmartPlayerEvent);
-    
-    return () => {
-      window.removeEventListener('message', handleSmartPlayerEvent);
-    };
+    return () => clearTimeout(timer);
   }, [step]);
 
   // Preload all images in background after initial page load

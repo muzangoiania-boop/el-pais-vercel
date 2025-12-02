@@ -142,137 +142,40 @@ export const QuizFlow = () => {
     }
   }, [step]);
 
-  // Load Wistia SDK when reaching video page
+  // Load VTurb SDK when reaching video page
   useEffect(() => {
     if (step === 18) {
-      const existingPlayerScript = document.querySelector('script[src*="fast.wistia.com/player.js"]');
-      if (!existingPlayerScript) {
-        const playerScript = document.createElement('script');
-        playerScript.src = 'https://fast.wistia.com/player.js';
-        playerScript.async = true;
-        document.head.appendChild(playerScript);
-      }
-      
-      const existingEmbedScript = document.querySelector('script[src*="fast.wistia.com/embed/8xc87ip699.js"]');
-      if (!existingEmbedScript) {
-        const embedScript = document.createElement('script');
-        embedScript.src = 'https://fast.wistia.com/embed/8xc87ip699.js';
-        embedScript.async = true;
-        embedScript.type = 'module';
-        document.head.appendChild(embedScript);
+      const existingScript = document.querySelector('script[src*="scripts.converteai.net"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js';
+        script.async = true;
+        document.head.appendChild(script);
       }
     }
   }, [step]);
 
-  // Track actual video playback time (ignoring pauses) and show CTA after threshold
-  const isPlayingRef = useRef(false);
-  const lastTimestampRef = useRef(0);
-  const accumulatedSecondsRef = useRef(0);
-  const wistiaBindedRef = useRef(false);
-  const CTA_THRESHOLD_SECONDS = 490; // 8 minutes and 10 seconds
+  // Listen for VTurb smartplayer events to show CTA button
+  const vturbBindedRef = useRef(false);
   
   useEffect(() => {
     if (step !== 18) return;
     
-    console.log('[Video Tracker] Starting Wistia playback tracking - CTA appears after', CTA_THRESHOLD_SECONDS, 'seconds watched');
+    vturbBindedRef.current = false;
     
-    // Reset tracking state when entering video page
-    isPlayingRef.current = false;
-    lastTimestampRef.current = 0;
-    accumulatedSecondsRef.current = 0;
-    wistiaBindedRef.current = false;
-    
-    // Event handlers for Wistia web component
-    const handlePlay = () => {
-      isPlayingRef.current = true;
-      console.log('[Video Tracker] PLAY - now tracking time. Accumulated so far:', accumulatedSecondsRef.current.toFixed(1), 's');
-    };
-    
-    const handlePause = () => {
-      isPlayingRef.current = false;
-      console.log('[Video Tracker] PAUSE - stopped tracking. Total watched:', accumulatedSecondsRef.current.toFixed(1), 's');
-    };
-    
-    const handleEnd = () => {
-      isPlayingRef.current = false;
-      console.log('[Video Tracker] ENDED - Total watched:', accumulatedSecondsRef.current.toFixed(1), 's');
-    };
-    
-    const handleTimeUpdate = (event: any) => {
-      const currentTime = event.detail?.currentTime ?? event.target?.currentTime ?? 0;
-      
-      // Only accumulate time if video is playing and time moved forward
-      if (isPlayingRef.current && currentTime > lastTimestampRef.current) {
-        const delta = currentTime - lastTimestampRef.current;
-        
-        // Only add reasonable deltas (ignore big jumps from seeking forward)
-        if (delta > 0 && delta < 2) {
-          accumulatedSecondsRef.current += delta;
-        }
-      }
-      
-      // Update last timestamp
-      lastTimestampRef.current = currentTime;
-      
-      // Show CTA button once threshold is reached
-      if (accumulatedSecondsRef.current >= CTA_THRESHOLD_SECONDS && !showCTAButton) {
-        console.log('[Video Tracker] THRESHOLD REACHED! Watched', accumulatedSecondsRef.current.toFixed(1), 's - SHOWING CTA BUTTON');
+    const handleSmartPlayerEvent = (e: any) => {
+      if (e.data === 'O PLAYER APARECEU' || e.data === 'O BOTAO APARECEU' || e.data?.type === 'O PLAYER APARECEU' || e.data?.type === 'O BOTAO APARECEU') {
+        console.log('[VTurb] Button trigger event received - showing CTA');
         setShowCTAButton(true);
       }
     };
     
-    let playerElement: HTMLElement | null = null;
-    let pollingInterval: NodeJS.Timeout | null = null;
-    
-    // Wistia web component binding using native DOM events
-    const bindWistiaPlayer = () => {
-      if (wistiaBindedRef.current) return;
-      
-      // Find the wistia-player element
-      playerElement = document.querySelector('wistia-player[media-id="8xc87ip699"]');
-      
-      if (playerElement) {
-        wistiaBindedRef.current = true;
-        console.log('[Video Tracker] Wistia player found - binding events');
-        
-        // Use native DOM addEventListener for web component events
-        playerElement.addEventListener('play', handlePlay);
-        playerElement.addEventListener('pause', handlePause);
-        playerElement.addEventListener('end', handleEnd);
-        playerElement.addEventListener('time-update', handleTimeUpdate);
-        
-        console.log('[Video Tracker] Events bound successfully');
-        
-        // Stop polling once bound
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          pollingInterval = null;
-        }
-      } else {
-        console.log('[Video Tracker] Waiting for Wistia player element...');
-      }
-    };
-    
-    // Poll every 500ms until player is found (more reliable than fixed timeouts)
-    pollingInterval = setInterval(bindWistiaPlayer, 500);
-    
-    // Also try immediately
-    bindWistiaPlayer();
+    window.addEventListener('message', handleSmartPlayerEvent);
     
     return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-      
-      // Clean up event listeners
-      if (playerElement) {
-        playerElement.removeEventListener('play', handlePlay);
-        playerElement.removeEventListener('pause', handlePause);
-        playerElement.removeEventListener('end', handleEnd);
-        playerElement.removeEventListener('time-update', handleTimeUpdate);
-      }
+      window.removeEventListener('message', handleSmartPlayerEvent);
     };
-  }, [step, showCTAButton]);
+  }, [step]);
 
   // Preload all images in background after initial page load
   useEffect(() => {
@@ -805,30 +708,31 @@ export const QuizFlow = () => {
         MIRA EL VIDEO A CONTINUACIÓN Y DESCUBRE CÓMO ACCEDER A TU PROTOCOLO DE GELATINA REDUCTORA.
       </h2>
 
-      {/* Wistia Video Player */}
+      {/* VTurb Video Player */}
       <div className="relative w-full rounded-lg overflow-hidden">
-        <div 
-          style={{ margin: '0 auto', width: '100%', maxWidth: '400px' }}
-          dangerouslySetInnerHTML={{ __html: `
-            <style>
-              wistia-player[media-id='8xc87ip699']:not(:defined) {
-                background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/8xc87ip699/swatch');
-                display: block;
-                filter: blur(5px);
-                padding-top: 152.5%;
-              }
-            </style>
-            <wistia-player media-id="8xc87ip699" seo="false" aspect="0.6557377049180327"></wistia-player>
-          `}}
-        />
+        <div id="ifr_692e4d6a3dbab420e9909b10_wrapper" style={{ margin: '0 auto', width: '100%', maxWidth: '400px' }}>
+          <div style={{ position: 'relative', paddingTop: '152.59259259259258%' }} id="ifr_692e4d6a3dbab420e9909b10_aspect">
+            <iframe 
+              frameBorder="0" 
+              allowFullScreen 
+              src="about:blank" 
+              id="ifr_692e4d6a3dbab420e9909b10" 
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              referrerPolicy="origin"
+              onLoad={(e) => {
+                const iframe = e.target as HTMLIFrameElement;
+                iframe.src = 'https://scripts.converteai.net/8a115e75-6120-44f3-a213-a7424af5f137/players/692e4d6a3dbab420e9909b10/v4/embed.html' + (window.location.search || '?') + '&vl=' + encodeURIComponent(window.location.href);
+              }}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* CTA Button - Initially hidden, appears after watching threshold */}
-      {/* Using <a> tag instead of <button> so GTM can detect link clicks to pay.hotmart.com */}
+      {/* CTA Button - Initially hidden, appears after VTurb triggers */}
       {showCTAButton && (
         <div className="mt-4 animate-fade-in">
           <a
-            href="https://pay.hotmart.com/I103092154N?off=8pqi3d4c&checkoutMode=10"
+            href="https://pay.hotmart.com/E103227991B?checkoutMode=10"
             onClick={handleCTAClick}
             className="w-full bg-news-yellow hover:bg-[#ebd040] text-black font-bold text-lg py-4 px-6 rounded shadow-md transition-all animate-pulse-cta-strong flex items-center justify-center gap-2"
           >

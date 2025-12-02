@@ -710,22 +710,23 @@ export const QuizFlow = () => {
 
       {/* VTurb Video Player */}
       <div className="relative w-full rounded-lg overflow-hidden">
-        <div id="ifr_692e4d6a3dbab420e9909b10_wrapper" style={{ margin: '0 auto', width: '100%', maxWidth: '400px' }}>
-          <div style={{ position: 'relative', paddingTop: '152.59259259259258%' }} id="ifr_692e4d6a3dbab420e9909b10_aspect">
-            <iframe 
-              frameBorder="0" 
-              allowFullScreen 
-              src="about:blank" 
-              id="ifr_692e4d6a3dbab420e9909b10" 
-              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              referrerPolicy="origin"
-              onLoad={(e) => {
-                const iframe = e.target as HTMLIFrameElement;
-                iframe.src = 'https://scripts.converteai.net/8a115e75-6120-44f3-a213-a7424af5f137/players/692e4d6a3dbab420e9909b10/v4/embed.html' + (window.location.search || '?') + '&vl=' + encodeURIComponent(window.location.href);
-              }}
-            />
-          </div>
-        </div>
+        <div 
+          id="ifr_692e4d6a3dbab420e9909b10_wrapper" 
+          style={{ margin: '0 auto', width: '100%', maxWidth: '400px' }}
+          dangerouslySetInnerHTML={{ __html: `
+            <div style="position: relative; padding-top: 152.59259259259258%;" id="ifr_692e4d6a3dbab420e9909b10_aspect">
+              <iframe 
+                frameborder="0" 
+                allowfullscreen 
+                src="about:blank" 
+                id="ifr_692e4d6a3dbab420e9909b10" 
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                referrerpolicy="origin"
+                onload="this.onload=null; this.src='https://scripts.converteai.net/8a115e75-6120-44f3-a213-a7424af5f137/players/692e4d6a3dbab420e9909b10/v4/embed.html'+(location.search||'?')+'&vl='+encodeURIComponent(location.href);"
+              ></iframe>
+            </div>
+          `}}
+        />
       </div>
 
       {/* CTA Button - Initially hidden, appears after VTurb triggers */}
